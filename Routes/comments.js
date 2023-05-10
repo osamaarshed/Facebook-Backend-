@@ -36,15 +36,36 @@ router.post("/", async (req, res) => {
     });
     // res.send(comments._id);
   } catch (error) {
+    // console.log(error);
+    res.status(404).send({ message: "Not Found" });
+  }
+});
+
+//Update
+router.put("/", async (req, res) => {
+  try {
+    // const userId = req.body.userId;
+    const comment = await Comments.find({
+      $and: [{ userId: req.body.userId }, { postId: req.body.postId }],
+    });
+    // console.log(comment[0].userId);
+    if (req.body.userId == comment[0].userId) {
+      await Comments.updateOne(
+        { userId: req.body.userId },
+        { comment: req.body.comment },
+        { new: true }
+      ).then(() => {
+        res.status(200).send({ message: "Successfully Updated" });
+      });
+    } else {
+      res.status(401).send({ message: "You are not authorized" });
+    }
+  } catch (error) {
+    console.log(error);
     res.status(404).send({ message: "Not Found" });
   }
 });
 
 //Delete
-// router.delete("/:userId", async (req, res) => {
-//   const user = req.params.userId;
-//   const postId = await Comments.find({ userId: user });
-//   console.log("PostId: ", postId, "user: ", user);
-// });
 
 module.exports = router;

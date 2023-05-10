@@ -8,7 +8,7 @@ const signup = require("./Routes/signup.js");
 const signin = require("./Routes/signin.js");
 const posts = require("./Routes/posts.js");
 const comments = require("./Routes/comments.js");
-const likes = require("./Routes/likes.js");
+// const likes = require("./Routes/likes.js");
 // const
 
 mongoose.connect("mongodb://localhost:27017/facebook");

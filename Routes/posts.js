@@ -1,22 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const Posts = require("../Models/Posts");
-const Likes = require("../Models/Likes");
+// const Likes = require("../Models/Likes");
 
 //Show
 router.get("/:userId", async (req, res) => {
   try {
     const post = await Posts.find({
-      userId: req.params.userId,
-      _id: req.query.postId,
+      $or: [{ userId: req.params.userId }, { _id: req.query.postId }],
     })
       .populate("comments")
       .populate("userId");
-    // console.log(req.params);
-    // console.log(req.query);
-    // console.log(post);
+
     res.status(200).send(post);
   } catch (error) {
+    console.log(error);
     res.status(404).send({ message: "Not Found" });
   }
 });
@@ -42,6 +40,7 @@ router.post("/", async (req, res) => {
       comments: [],
       shares: req.body.shares,
       userId: req.body.userId,
+      postDescription: req.body.postDescription,
     }).then(() => {
       res.status(201).send({ message: "Created" });
     });
@@ -57,16 +56,9 @@ router.post("/like", async (req, res) => {
       await Posts.findOneAndUpdate(
         { _id: req.body.postId },
         { $addToSet: { likes: [req.body.userId] } }
-      )
-        // .then(async () => {
-        //   await Posts.findOneAndUpdate(
-        //     { _id: req.body.postId },
-        //     { likeCount: likes.length }
-        //   );
-        // })
-        .then(() => {
-          res.status(200).send({ message: "Liked" });
-        });
+      ).then(() => {
+        res.status(200).send({ message: "Liked" });
+      });
     } else {
       res.send({ message: "Like Did not Added because it was false" });
     }
@@ -76,34 +68,71 @@ router.post("/like", async (req, res) => {
   }
 });
 
-// Update
-// router.put("/:userid", async (req, res) => {
-//   try {
-//     await Posts.findOneAndUpdate(
-//       { _id: req.params.userid },
-//       { $push: { comments: req.body.userid } },
-//       { new: true }
-//     ).then(() => {
-//       res.status(200).send("Updated");
-//     });
-//   } catch (error) {
-//     res.status(404).send({ message: error });
-//   }
-// });
-
-//Delete
-router.delete("/:userId", async (req, res) => {
+//Update
+router.put("/", async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const post = await Posts.findOneAndDelete({ userId: userId });
-    if (!post) {
-      res.status(404).send({ message: "No Post Found" });
+    const post = await Posts.findOneAndUpdate(
+      {
+        $and: [{ userId: req.body.userId }, { _id: req.body.postId }],
+      },
+      { postDescription: req.body.postDescription }
+    );
+    // console.log(post);
+
+    if (post) {
+      res.status(200).send({ message: "Updated Successfully" });
     } else {
-      res.status(200).send({ message: "Successfully Deleted", post: post });
+      res.status(401).send({
+        message: "Not Authorized to Update this post",
+      });
     }
   } catch (error) {
     res.status(404).send({ message: error });
   }
 });
+
+//Delete
+router.delete("/", async (req, res) => {
+  try {
+    const post = await Posts.find({
+      $and: [{ userId: req.query.userId }, { _id: req.query.postId }],
+    }).deleteOne();
+
+    if (post.deletedCount) {
+      res.status(200).send({ message: "Deleted Successfully", user: post });
+    } else {
+      res.status(401).send({
+        message: "Not Authorized to Delete this post",
+        user: post.deletedCount,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(404).send({ message: "Not Found" });
+  }
+});
+// router.delete("/", async (req, res) => {
+//   try {
+//     const user = await Posts.find({
+//       userId: req.query.userId,
+//     });
+//     // console.log(user);
+//     if (req.query.userId == user[0].userId) {
+//       await Posts.find({
+//         $and: [{ userId: req.query.userId }, { _id: req.query.postId }],
+//       })
+//         .deleteOne()
+//         .then(() => {
+//           res.status(200).send({ message: "Deleted Successfully", user: user });
+//         });
+//     } else {
+//       // console.log(user[0].userId);
+//       res.status(401).send({ message: "Not Authorized to Delete this post" });
+//     }
+//   } catch (error) {
+//     // console.log(error);
+//     res.status(404).send({ message: error });
+//   }
+// });
 
 module.exports = router;

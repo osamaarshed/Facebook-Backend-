@@ -7,6 +7,7 @@ const postsSchema = new mongoose.Schema(
     comments: [{ type: "ObjectId", ref: "Comments" }],
     shares: { type: Number },
     userId: { type: "ObjectId", ref: "Authentication" },
+    postDescription: { type: String },
   },
   {
     collection: "Posts",
