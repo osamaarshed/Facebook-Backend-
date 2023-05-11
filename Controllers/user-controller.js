@@ -4,7 +4,9 @@ const bcrypt = require("bcrypt");
 
 const showUsers = async (req, res) => {
   try {
-    const users = await Authentication.find({});
+    const users = await Authentication.find({})
+      .populate("friends", "name")
+      .populate("friendRequests", "name");
     res.status(200).send(users);
   } catch (error) {
     res.status(404).send({ message: "Not Found" });

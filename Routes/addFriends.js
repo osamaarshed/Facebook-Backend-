@@ -8,4 +8,7 @@ router.post("/", addFriendsController.sendRequest);
 //Accept Request
 router.post("/status", addFriendsController.acceptRequest);
 
+//Show Requests
+router.get("/", addFriendsController.showRequests);
+
 module.exports = router;

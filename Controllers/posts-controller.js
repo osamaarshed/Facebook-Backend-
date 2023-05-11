@@ -3,13 +3,16 @@ const Posts = require("../Models/Posts");
 
 const showPosts = async (req, res) => {
   try {
-    const [post] = await Posts.find({
-      $and: [{ userId: req.params.userId }, { _id: req.query.postId }],
-    })
+    const [post] = await Posts.find(
+      {
+        $or: [{ userId: req.params.userId }, { _id: req.query.postId }],
+      },
+      { comments: 1, shares: 1, userId: 1, postDescription: 1 }
+    )
       .populate("comments")
       .populate("userId");
 
-    console.log(post.likes.length);
+    // console.log(post.likes.length);
     res.status(200).send({ message: "Success", post: post });
   } catch (error) {
     console.log(error);

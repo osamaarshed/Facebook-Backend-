@@ -9,21 +9,12 @@ const port = 8080;
 
 //Importing Routes
 const routes = require("./Routes/routes");
-// const user = require("./Routes/user.js");
-// const posts = require("./Routes/posts.js");
-// const comments = require("./Routes/comments.js");
-// const addFriends = require("./Routes/addFriends.js");
+// const error = require("./Middlewares/errorHandling");
 
 mongoose.connect("mongodb://localhost:27017/facebook");
 
 //Routes
-// app.use("/signup", user);
 app.use("/", routes);
-// app.use("/", posts);
-// app.use("/", comments);
-// app.use("/", addFriends);
-// app.use("/likes", likes);
-
 app.listen(port, () => {
   console.log("Running on port: " + port);
 });
