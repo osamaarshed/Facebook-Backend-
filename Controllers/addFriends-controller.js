@@ -6,28 +6,76 @@ const sendRequest = async (req, res) => {
     const userId = req.body.userId;
     const friendId = req.body.friendId;
 
-    const user = await Authentication.find({ _id: userId });
+    const [user] = await Authentication.find({ _id: userId });
     if (!user) {
       res.status(404).send({ message: "User does not exist" });
     }
-    const friend = await Authentication.find({ _id: friendId });
+    const [friend] = await Authentication.find({ _id: friendId });
     if (!friend) {
       res.status(404).send({ message: "This user does not exist" });
     }
+    // console.log(friend.friendRequests.includes(friendId));
     if (
-      user[0].friends.includes(friendId) ||
-      user[0].friendRequests.includes(friendId)
+      friend.friends.includes(userId) ||
+      friend.friendRequests.includes(userId)
     ) {
       res.send({ message: "Friend Request Already Sent" });
     } else {
-      user[0].friendRequests.push(friendId);
-      await user[0].save();
+      friend.friendRequests.push(userId);
+      await friend.save();
       res.status(200).send({ message: "Friend Request Added" });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(404).send({ message: "Not Found" });
   }
 };
 
-module.exports = { sendRequest };
+const acceptRequest = async (req, res) => {
+  try {
+    // const userId = req.body.userId;
+
+    const user = await Authentication.findById(req.body.userId);
+    if (!user.friendRequests) {
+      res.status(404).send({ message: "No Friend Requests" });
+    }
+    if (
+      user.friendRequests.includes(req.body.friendId) &&
+      req.body.status === "accept"
+    ) {
+      //   console.log(user);
+      await Authentication.updateMany(
+        { _id: req.body.userId },
+        {
+          $addToSet: { friends: [req.body.friendId] },
+          $pull: { friendRequests: req.body.friendId },
+        }
+      )
+        .then(async () => {
+          await Authentication.updateOne(
+            { _id: req.body.friendId },
+            { $addToSet: { friends: [req.body.userId] } }
+          );
+        })
+        .then(() => {
+          res.status(200).send({ message: "Friend Request Accepted" });
+        });
+      //   await reqAccept.save();
+    } else if (
+      user.friendRequests.includes(req.body.friendId) &&
+      req.body.status === "delete"
+    ) {
+      await user.updateOne({ $pull: { friendRequests: req.body.friendId } });
+      user.save();
+      res.status(200).send({ message: "Friend Request Deleted" });
+    } else {
+      res.status(404).send({ message: "Friend Request does not exist" });
+    }
+    // res.send("Abhi kch nhi kiya");
+  } catch (error) {
+    // console.log(error);
+    res.status(404).send({ message: "Not Found" });
+  }
+};
+
+module.exports = { sendRequest, acceptRequest };

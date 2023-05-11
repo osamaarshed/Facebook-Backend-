@@ -3,13 +3,14 @@ const Posts = require("../Models/Posts");
 
 const showPosts = async (req, res) => {
   try {
-    const post = await Posts.find({
-      $or: [{ userId: req.params.userId }, { _id: req.query.postId }],
+    const [post] = await Posts.find({
+      $and: [{ userId: req.params.userId }, { _id: req.query.postId }],
     })
       .populate("comments")
       .populate("userId");
 
-    res.status(200).send(post);
+    console.log(post.likes.length);
+    res.status(200).send({ message: "Success", post: post });
   } catch (error) {
     console.log(error);
     res.status(404).send({ message: "Not Found" });
@@ -34,17 +35,46 @@ const createPost = async (req, res) => {
 
 const likePost = async (req, res) => {
   try {
+    const [post] = await Posts.find({ _id: req.body.postId });
     if (req.body.like === "true") {
-      await Posts.findOneAndUpdate(
+      // await Posts.findOneAndUpdate(
+      //   { _id: req.body.postId },
+      //   { $addToSet: { likes: [req.body.userId] } }
+
+      // ).then(() => {
+      //   res.status(200).send({ message: "Liked" });
+      // });
+      // const [post] = await Posts.find({ _id: req.body.postId });
+
+      await Posts.updateMany(
         { _id: req.body.postId },
-        { $addToSet: { likes: [req.body.userId] } }
+        {
+          $set: { likeCount: post.likes.length },
+          $addToSet: { likes: [req.body.userId] },
+        }
       ).then(() => {
         res.status(200).send({ message: "Liked" });
       });
+    } else if (
+      req.body.like === "false" &&
+      post.likes.includes(req.body.userId)
+    ) {
+      // const [post] = await Posts.find({ _id: req.body.postId });
+      await Posts.updateMany(
+        { _id: req.body.postId },
+        {
+          $pull: { likes: req.body.userId },
+          $set: { likeCount: post.likes.length },
+        }
+      ).then(() => {
+        res.status(200).send({ message: "Disliked" });
+      });
     } else {
-      res.send({ message: "Like Did not Added because it was false" });
+      // console.log(post.likes);
+      res.status(404).send("sandkjas");
     }
   } catch (error) {
+    console.log(error);
     res.status(404).send({ message: "Not Found" });
   }
 };

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../Controllers/user-controller");
+const token = require("../Middlewares/token");
 
 //Show
 router.get("/signup", userController.showUsers);
@@ -9,6 +10,6 @@ router.get("/signup", userController.showUsers);
 router.post("/signup", userController.signUp);
 
 //Signin
-router.post("/signin", userController.signIn);
+router.post("/signin", token.tokenSign, userController.signIn);
 
 module.exports = router;

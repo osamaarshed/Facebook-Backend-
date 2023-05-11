@@ -3,6 +3,9 @@ const router = express.Router();
 const addFriendsController = require("../Controllers/addFriends-controller");
 
 //Send Request
-router.post("/addfriends", addFriendsController.sendRequest);
+router.post("/", addFriendsController.sendRequest);
+
+//Accept Request
+router.post("/status", addFriendsController.acceptRequest);
 
 module.exports = router;

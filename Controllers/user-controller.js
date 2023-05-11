@@ -42,6 +42,8 @@ const signIn = async (req, res) => {
       user.password
     );
     if (isPasswordValid) {
+      await user.updateOne({ jwttoken: req.jwttoken });
+      user.save();
       res.status(200).send({
         status: "Ok",
         message: "User Found",

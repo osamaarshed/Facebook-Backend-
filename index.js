@@ -8,19 +8,20 @@ app.use(express.urlencoded({ extended: false }));
 const port = 8080;
 
 //Importing Routes
-const user = require("./Routes/user.js");
-const posts = require("./Routes/posts.js");
-const comments = require("./Routes/comments.js");
-const addFriends = require("./Routes/addFriends.js");
+const routes = require("./Routes/routes");
+// const user = require("./Routes/user.js");
+// const posts = require("./Routes/posts.js");
+// const comments = require("./Routes/comments.js");
+// const addFriends = require("./Routes/addFriends.js");
 
 mongoose.connect("mongodb://localhost:27017/facebook");
 
 //Routes
 // app.use("/signup", user);
-app.use("/", user);
-app.use("/", posts);
-app.use("/", comments);
-app.use("/", addFriends);
+app.use("/", routes);
+// app.use("/", posts);
+// app.use("/", comments);
+// app.use("/", addFriends);
 // app.use("/likes", likes);
 
 app.listen(port, () => {

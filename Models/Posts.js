@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const postsSchema = new mongoose.Schema(
   {
+    // likes: { type: Number },
     likes: [{ type: String }],
     likeCount: { type: Number },
     comments: [{ type: "ObjectId", ref: "Comments" }],

@@ -6,10 +6,9 @@ const authenticationSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     confirmpassword: { type: String, required: true },
-    friends: [{ type: "ObjectId", ref: "Authentication", default: "ah" }],
-    friendRequests: [
-      { type: "ObjectId", ref: "Authentication", default: "ah" },
-    ],
+    friends: [{ type: "ObjectId", ref: "Authentication" }],
+    friendRequests: [{ type: "ObjectId", ref: "Authentication" }],
+    jwttoken: { type: String },
   },
   {
     collection: "credentials",

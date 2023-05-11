@@ -3,13 +3,13 @@ const router = express.Router();
 const commentController = require("../Controllers/comment-controller");
 
 //Show
-router.get("/comments", commentController.showComments);
+router.get("/", commentController.showComments);
 
 //Create
-router.post("/comments", commentController.createComments);
+router.post("/", commentController.createComments);
 
 //Update
-router.put("/comments", commentController.updateComments);
+router.put("/", commentController.updateComments);
 
 //Delete
 
