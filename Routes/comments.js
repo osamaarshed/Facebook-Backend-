@@ -1,15 +1,19 @@
 const express = require("express");
 const router = express.Router();
-const commentController = require("../Controllers/comment-controller");
+const {
+  showComments,
+  createComments,
+  updateComments,
+} = require("../Controllers/comment-controller");
 
 //Show
-router.get("/", commentController.showComments);
+router.get("/", showComments);
 
 //Create
-router.post("/", commentController.createComments);
+router.post("/", createComments);
 
 //Update
-router.put("/", commentController.updateComments);
+router.put("/", updateComments);
 
 //Delete
 

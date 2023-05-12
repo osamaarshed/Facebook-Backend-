@@ -1,9 +1,13 @@
 const express = require("express");
+const { Error_Messages } = require("../constants");
 
-const errorHandle = (err, req, res, next) => {
-  const errStatus = err.statusCode || 500;
-  const errMsg = err.message || "Something Broke";
-  res.status(errStatus).send({ message: errMsg });
+const errorHandler = (err, req, res, next) => {
+  res.status(500).send({ error: err.stack, message: Error_Messages.Server });
 };
 
-module.exports = errorHandle;
+module.exports = errorHandler;
+
+// const errorHandler = (err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).send({ message: 'Internal Server Error' });
+// }

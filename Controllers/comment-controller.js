@@ -1,64 +1,66 @@
 const express = require("express");
 const Comments = require("../Models/Comments");
 const Posts = require("../Models/Posts");
+const { Error_Messages, Success_Messages } = require("../constants");
 
-const showComments = async (req, res) => {
+const showComments = async (req, res, next) => {
   try {
     const comment = await Comments.find({})
       .populate("userId")
       .populate("postId");
     res.status(200).send(comment);
   } catch (error) {
-    res.status(404).send({ message: "Not Found" });
+    // res.status(404).send({ message: Error_Messages.Not_Found });
+    next(error);
   }
 };
 
-const createComments = async (req, res) => {
+const createComments = async (req, res, next) => {
   const payload = {
     comment: req.body.comment,
-    userId: req.body.userId,
+    userId: req.user,
     postId: req.body.postId,
   };
   try {
-    // await Comments.create(payload).then(() => {
-    //   res.status(201).send({ message: "Comment Posted" });
-    // });
     const comments = await Comments.create(payload);
     await Posts.findOneAndUpdate(
       { _id: req.body.postId },
       { $push: { comments: comments._id } },
       { new: true }
-    ).then(() => {
-      res.send("Done");
-    });
+    );
+
+    await res.status(200).send({ message: Success_Messages.Comment });
+
     // res.send(comments._id);
   } catch (error) {
     // console.log(error);
-    res.status(404).send({ message: "Not Found" });
+    // res.status(404).send({ message: Error_Messages.Not_Found });
+    next(error);
   }
 };
 
-const updateComments = async (req, res) => {
+const updateComments = async (req, res, next) => {
   try {
     // const userId = req.body.userId;
-    const comment = await Comments.find({
-      $and: [{ userId: req.body.userId }, { postId: req.body.postId }],
+    const [comment] = await Comments.find({
+      $and: [{ userId: req.user }, { postId: req.body.postId }],
     });
     // console.log(comment[0].userId);
-    if (req.body.userId == comment[0].userId) {
+    if (req.user == comment.userId) {
       await Comments.updateOne(
-        { userId: req.body.userId },
+        { userId: req.user },
         { comment: req.body.comment },
         { new: true }
       ).then(() => {
-        res.status(200).send({ message: "Successfully Updated" });
+        res.status(200).send({ message: Success_Messages.Update });
       });
     } else {
-      res.status(401).send({ message: "You are not authorized" });
+      res.status(401).send({ message: Error_Messages.UnAuthorized });
     }
   } catch (error) {
-    console.log(error);
-    res.status(404).send({ message: "Not Found" });
+    // console.log(error);
+    // res.status(404).send({ message: Error_Messages.Not_Found });
+    next(error);
   }
 };
 

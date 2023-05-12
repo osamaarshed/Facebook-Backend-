@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../Controllers/user-controller");
-const token = require("../Middlewares/token");
+const { showUsers, signUp, signIn } = require("../Controllers/user-controller");
+const { tokenSign } = require("../Middlewares/token");
 
 //Show
-router.get("/signup", userController.showUsers);
+router.get("/signup", showUsers, );
 
 //Create
-router.post("/signup", userController.signUp);
+router.post("/signup", signUp);
 
 //Signin
-router.post("/signin", token.tokenSign, userController.signIn);
+router.post("/signin", tokenSign, signIn);
 
 module.exports = router;

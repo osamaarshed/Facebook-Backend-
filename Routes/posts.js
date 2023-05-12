@@ -1,20 +1,26 @@
 const express = require("express");
 const router = express.Router();
-const postController = require("../Controllers/posts-controller");
+const {
+  showPosts,
+  createPost,
+  likePost,
+  updatePost,
+  deletePost,
+} = require("../Controllers/posts-controller");
 
 //Show
-router.get("/:userId", postController.showPosts);
+router.get("/", showPosts);
 
 // Create
-router.post("/", postController.createPost);
+router.post("/", createPost);
 
 // Post Like
-router.post("/like", postController.likePost);
+router.post("/like", likePost);
 
 //Update
-router.put("/", postController.updatePost);
+router.put("/", updatePost);
 
 //Delete
-router.delete("/", postController.deletePost);
+router.delete("/", deletePost);
 
 module.exports = router;

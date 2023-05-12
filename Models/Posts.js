@@ -6,9 +6,9 @@ const postsSchema = new mongoose.Schema(
     likes: [{ type: String }],
     likeCount: { type: Number },
     comments: [{ type: "ObjectId", ref: "Comments" }],
-    shares: { type: Number },
-    userId: { type: "ObjectId", ref: "Authentication" },
-    postDescription: { type: String },
+    shares: { type: Number, default: 54 },
+    userId: { type: "ObjectId", ref: "User" },
+    postDescription: { type: String, required: true },
   },
   {
     collection: "Posts",

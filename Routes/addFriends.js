@@ -1,14 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const addFriendsController = require("../Controllers/addFriends-controller");
+const {
+  sendRequest,
+  acceptRequest,
+} = require("../Controllers/addFriends-controller");
 
 //Send Request
-router.post("/", addFriendsController.sendRequest);
+router.post("/", sendRequest);
 
 //Accept Request
-router.post("/status", addFriendsController.acceptRequest);
+router.post("/status", acceptRequest);
 
 //Show Requests
-router.get("/", addFriendsController.showRequests);
+// router.get("/", showRequests);
 
 module.exports = router;

@@ -1,10 +1,10 @@
 const express = require("express");
-const Authentication = require("../Models/Authentication");
+const User = require("../Models/UserModel");
 const jwt = require("jsonwebtoken");
 const secretKey = "thisisthesecretkey12345";
 
 const tokenSign = async (req, res, next) => {
-  const [user] = await Authentication.find({ email: req.body.email });
+  const [user] = await User.find({ email: req.body.email });
   const payload = {
     _id: user._id,
   };
@@ -20,7 +20,8 @@ const authenticate = async (req, res, next) => {
       if (err) {
         return res.status(401).send("Not Authorized By JWT");
       }
-      req.user = user;
+      req.user = user._id;
+      // console.log(req.user);
       next();
     });
   } else {
