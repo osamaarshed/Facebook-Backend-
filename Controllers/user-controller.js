@@ -46,14 +46,15 @@ const signIn = async (req, res, next) => {
       user.password
     );
     if (isPasswordValid) {
-      await user.updateOne({ jwttoken: req.jwttoken });
-      user.save();
+      // await user.updateOne({ jwttoken: req.jwttoken });
+      // user.save();
       res.status(200).send({
         message: Success_Messages.Login,
-        userInfo: user,
+        // userInfo: user,
+        jwt: req.jwttoken,
       });
     } else {
-      res.status(401).send({ status: Error_Messages.Wrong_Password });
+      res.status(401).send({ message: Error_Messages.Wrong_Password });
     }
   } catch (error) {
     // res.status(404).send({ message: Error_Messages.Not_Found });

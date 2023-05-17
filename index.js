@@ -9,7 +9,6 @@ const port = 8080;
 
 //Importing Routes
 const routes = require("./Routes/routes");
-// const error = require("./Middlewares/errorHandling");
 
 mongoose.connect("mongodb://localhost:27017/facebook");
 

@@ -6,10 +6,13 @@ const {
   likePost,
   updatePost,
   deletePost,
+  showOthersPosts,
 } = require("../Controllers/posts-controller");
 
 //Show
 router.get("/", showPosts);
+
+router.get("/all", showOthersPosts);
 
 // Create
 router.post("/", createPost);

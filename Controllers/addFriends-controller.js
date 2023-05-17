@@ -6,6 +6,18 @@ const {
   Success_Messages,
 } = require("../constants");
 
+const findFriend = async (req, res, next) => {
+  // console.log(req.params.email);
+  const friend = await User.find({ email: req.params.email });
+  // console.log(friend);
+  if (!friend) {
+    // console.log("here");
+    res.status(404).send({ message: Error_Messages.Not_Found });
+  } else {
+    res.status(200).send(friend);
+  }
+};
+
 const sendRequest = async (req, res, next) => {
   try {
     const userId = req.user;
@@ -39,14 +51,38 @@ const sendRequest = async (req, res, next) => {
   }
 };
 
+const showRequests = async (req, res, next) => {
+  try {
+    // console.log(req.user, "heer");
+    const [user] = await User.find({ _id: req.user }).populate(
+      "friendRequests"
+    );
+    // console.log(user);
+    res.status(200).send({ requests: user.friendRequests });
+  } catch (error) {
+    next(error);
+  }
+};
+const showFriends = async (req, res, next) => {
+  try {
+    const [user] = await User.find({ _id: req.user }).populate("friends");
+    if (!user.friends.length) {
+      res.status(404).send({ message: Error_Messages.No_friends });
+    } else {
+      res.status(200).send({ message: user.friends });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 const acceptRequest = async (req, res, next) => {
   try {
     // const userId = req.body.userId;
-
+    // console.log("here");
     const user = await User.findById(req.user);
 
     if (!user.friendRequests.length) {
-      // console.log("No fr");
       res.status(404).send({ message: "No Friend Requests" });
     }
     if (
@@ -87,4 +123,10 @@ const acceptRequest = async (req, res, next) => {
   }
 };
 
-module.exports = { sendRequest, acceptRequest };
+module.exports = {
+  sendRequest,
+  acceptRequest,
+  findFriend,
+  showRequests,
+  showFriends,
+};

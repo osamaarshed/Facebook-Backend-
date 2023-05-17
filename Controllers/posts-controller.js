@@ -1,25 +1,57 @@
 const express = require("express");
 const Posts = require("../Models/Posts");
 const { Error_Messages, Success_Messages } = require("../constants");
+const User = require("../Models/UserModel");
 
 const showPosts = async (req, res, next) => {
   try {
     // console.log(req.user);
-    const [post] = await Posts.find(
+    const posts = await Posts.find(
       {
         $or: [{ userId: req.user }, { _id: req.query.postId }],
         // $or: [{ userId: req.params.userId }, { _id: req.query.postId }],
       },
-      { comments: 1, shares: 1, userId: 1, postDescription: 1 }
+      { comments: 1, shares: 1, userId: 1, postDescription: 1, likes: 1 }
     )
+      // .select("comments shares userId postDescription ")
       .populate("comments")
-      .populate("userId");
+      .populate("userId")
+      .populate("likes");
 
-    // console.log(post.likes.length);
-    res.status(200).send({ message: "Success", post: post });
+    if (!posts.length) {
+      res.status(404).send({ message: Error_Messages.Not_Found });
+    } else {
+      // console.log("post", posts);
+      const formattedData = posts.map((object) => {
+        return { ...object._doc, likesCount: object.likes.length };
+      });
+
+      // console.log(formattedData);
+      await res.status(200).send({
+        message: "Success",
+        post: formattedData,
+      });
+    }
   } catch (error) {
     console.log(error);
-    // res.status(404).send({ message: Error_Messages.Not_Found });
+    next(error);
+  }
+};
+
+const showOthersPosts = async (req, res, next) => {
+  try {
+    const [user] = await User.find({ _id: req.user });
+    // console.log(user.friends);
+
+    // res.send(user.friends);
+    const posts = await Posts.find({ userId: { $in: user.friends } });
+    // console.log(posts);
+    if (!posts.length) {
+      res.status(404).send({ message: Error_Messages.Not_Found });
+    } else {
+      res.status(200).send(posts);
+    }
+  } catch (error) {
     next(error);
   }
 };
@@ -44,28 +76,29 @@ const likePost = async (req, res, next) => {
   try {
     const [post] = await Posts.find({ _id: req.body.postId });
     if (req.body.like === "true") {
-      await Posts.updateMany(
+      await Posts.updateOne(
         { _id: req.body.postId },
         {
-          $set: { likeCount: post.likes.length },
+          // $set: { likeCount: post.likes.length },
           $addToSet: { likes: [req.user] },
-        }
-      ).then(() => {
-        res.status(200).send({ message: "Liked" });
-      });
+        },
+        { new: true }
+      );
+      // console.log(req.user);
+      await res.status(200).send({ message: "Liked" });
     } else if (req.body.like === "false" && post.likes.includes(req.user)) {
       // const [post] = await Posts.find({ _id: req.body.postId });
-      await Posts.updateMany(
+      await Posts.updateOne(
         { _id: req.body.postId },
         {
           $pull: { likes: req.user },
-          $set: { likeCount: post.likes.length },
+          // $set: { likeCount: post.likes.length },
         }
-      ).then(() => {
-        res.status(200).send({ message: "Disliked" });
-      });
+      );
+      await res.status(200).send({ message: "Disliked" });
     } else {
       // console.log(post.likes);
+      // console.log("here");
       res.status(404).send({ message: Error_Messages.Not_Found });
     }
   } catch (error) {
@@ -74,6 +107,40 @@ const likePost = async (req, res, next) => {
     next(error);
   }
 };
+// const likePost = async (req, res, next) => {
+//   try {
+//     const [post] = await Posts.find({ _id: req.body.postId });
+//     if (req.body.like === "true") {
+//       await Posts.updateMany(
+//         { _id: req.body.postId },
+//         {
+//           $set: { likeCount: post.likes.length },
+//           $addToSet: { likes: [req.user] },
+//         }
+//       ).then(() => {
+//         res.status(200).send({ message: "Liked" });
+//       });
+//     } else if (req.body.like === "false" && post.likes.includes(req.user)) {
+//       // const [post] = await Posts.find({ _id: req.body.postId });
+//       await Posts.updateMany(
+//         { _id: req.body.postId },
+//         {
+//           $pull: { likes: req.user },
+//           $set: { likeCount: post.likes.length },
+//         }
+//       ).then(() => {
+//         res.status(200).send({ message: "Disliked" });
+//       });
+//     } else {
+//       // console.log(post.likes);
+//       res.status(404).send({ message: Error_Messages.Not_Found });
+//     }
+//   } catch (error) {
+//     // console.log(error);
+//     // res.status(404).send({ message: Error_Messages.Not_Found });
+//     next(error);
+//   }
+// };
 
 const updatePost = async (req, res, next) => {
   try {
@@ -119,4 +186,11 @@ const deletePost = async (req, res, next) => {
   }
 };
 
-module.exports = { showPosts, createPost, likePost, updatePost, deletePost };
+module.exports = {
+  showPosts,
+  createPost,
+  likePost,
+  updatePost,
+  deletePost,
+  showOthersPosts,
+};

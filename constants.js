@@ -6,6 +6,7 @@ module.exports = {
     Not_Exist: "User Does Not Exist",
     Password: "Password Does Not Match",
     Server: "Interval Server Error",
+    No_friends: "No Friends",
   },
   Success_Messages: {
     Created: "Created Successfully",

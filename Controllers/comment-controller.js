@@ -5,17 +5,20 @@ const { Error_Messages, Success_Messages } = require("../constants");
 
 const showComments = async (req, res, next) => {
   try {
-    const comment = await Comments.find({})
+    // console.log(req.params.postId);
+    const comment = await Comments.find({ postId: req.params.postId })
       .populate("userId")
       .populate("postId");
     res.status(200).send(comment);
   } catch (error) {
-    // res.status(404).send({ message: Error_Messages.Not_Found });
     next(error);
   }
 };
 
 const createComments = async (req, res, next) => {
+  // console.log(req.body.comment, "Comment:");
+  // console.log(req.user, "UserId:");
+  // console.log(req.body.postId, "PostId");
   const payload = {
     comment: req.body.comment,
     userId: req.user,

@@ -7,7 +7,7 @@ const {
 } = require("../Controllers/comment-controller");
 
 //Show
-router.get("/", showComments);
+router.get("/:postId", showComments);
 
 //Create
 router.post("/", createComments);
