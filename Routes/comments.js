@@ -4,6 +4,7 @@ const {
   showComments,
   createComments,
   updateComments,
+  deleteComment,
 } = require("../Controllers/comment-controller");
 
 //Show
@@ -16,5 +17,6 @@ router.post("/", createComments);
 router.put("/", updateComments);
 
 //Delete
+router.delete("/:postId", deleteComment);
 
 module.exports = router;

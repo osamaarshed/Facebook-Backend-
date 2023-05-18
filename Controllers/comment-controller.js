@@ -67,4 +67,23 @@ const updateComments = async (req, res, next) => {
   }
 };
 
-module.exports = { showComments, createComments, updateComments };
+const deleteComment = async (req, res, next) => {
+  try {
+    const comment = await Comments.findOneAndDelete({
+      $and: [{ userId: req.user }, { postId: req.params.postId }],
+    });
+    // console.log(comment);
+    res
+      .status(200)
+      .send({ message: Success_Messages.Delete, comment: comment });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  showComments,
+  createComments,
+  updateComments,
+  deleteComment,
+};

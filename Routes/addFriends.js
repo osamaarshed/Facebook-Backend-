@@ -5,7 +5,8 @@ const {
   acceptRequest,
   findFriend,
   showRequests,
-  showFriends
+  showFriends,
+  deleteFriends,
 } = require("../Controllers/addFriends-controller");
 
 //Show Friends
@@ -20,6 +21,9 @@ router.post("/", sendRequest);
 
 //Accept Request
 router.post("/status", acceptRequest);
+
+//Delete Request
+router.delete("/:friendId", deleteFriends);
 
 //Show Requests
 // router.get("/", showRequests);

@@ -92,8 +92,8 @@ const acceptRequest = async (req, res, next) => {
       await User.updateMany(
         { _id: req.user },
         {
-          $addToSet: { friends: [req.body.friendId] },
           $pull: { friendRequests: req.body.friendId },
+          $addToSet: { friends: [req.body.friendId] },
         }
       );
       // .then(async () => {
@@ -108,7 +108,7 @@ const acceptRequest = async (req, res, next) => {
       //   await reqAccept.save();
     } else if (
       user.friendRequests.includes(req.body.friendId) &&
-      req.body.status === "delete"
+      req.body.status === "reject"
     ) {
       await user.updateOne({ $pull: { friendRequests: req.body.friendId } });
       user.save();
@@ -123,10 +123,29 @@ const acceptRequest = async (req, res, next) => {
   }
 };
 
+const deleteFriends = async (req, res, next) => {
+  try {
+    const [user] = await User.find({
+      _id: req.user,
+    });
+    const [friend] = await User.find({ _id: req.params.friendId });
+    if (user.friends.includes(req.params.friendId)) {
+      await user.updateOne({ $pull: { friends: req.params.friendId } });
+      await friend.updateOne({ $pull: { friends: req.user } });
+      res.status(200).send({ message: Success_Messages.Delete });
+    } else {
+      res.status(404).send({ message: Error_Messages.Not_Exist });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   sendRequest,
   acceptRequest,
   findFriend,
   showRequests,
   showFriends,
+  deleteFriends,
 };

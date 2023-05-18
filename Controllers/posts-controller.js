@@ -107,40 +107,6 @@ const likePost = async (req, res, next) => {
     next(error);
   }
 };
-// const likePost = async (req, res, next) => {
-//   try {
-//     const [post] = await Posts.find({ _id: req.body.postId });
-//     if (req.body.like === "true") {
-//       await Posts.updateMany(
-//         { _id: req.body.postId },
-//         {
-//           $set: { likeCount: post.likes.length },
-//           $addToSet: { likes: [req.user] },
-//         }
-//       ).then(() => {
-//         res.status(200).send({ message: "Liked" });
-//       });
-//     } else if (req.body.like === "false" && post.likes.includes(req.user)) {
-//       // const [post] = await Posts.find({ _id: req.body.postId });
-//       await Posts.updateMany(
-//         { _id: req.body.postId },
-//         {
-//           $pull: { likes: req.user },
-//           $set: { likeCount: post.likes.length },
-//         }
-//       ).then(() => {
-//         res.status(200).send({ message: "Disliked" });
-//       });
-//     } else {
-//       // console.log(post.likes);
-//       res.status(404).send({ message: Error_Messages.Not_Found });
-//     }
-//   } catch (error) {
-//     // console.log(error);
-//     // res.status(404).send({ message: Error_Messages.Not_Found });
-//     next(error);
-//   }
-// };
 
 const updatePost = async (req, res, next) => {
   try {
@@ -168,7 +134,7 @@ const updatePost = async (req, res, next) => {
 const deletePost = async (req, res, next) => {
   try {
     const post = await Posts.find({
-      $and: [{ userId: req.user }, { _id: req.query.postId }],
+      $and: [{ userId: req.user }, { _id: req.params.postId }],
     }).deleteOne();
 
     if (post.deletedCount) {
