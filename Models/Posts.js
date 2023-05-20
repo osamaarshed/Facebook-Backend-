@@ -9,6 +9,7 @@ const postsSchema = new mongoose.Schema(
     shares: { type: Number, default: 54 },
     userId: { type: "ObjectId", ref: "User" },
     postDescription: { type: String, required: true },
+    inputFile: { type: String, required: true },
   },
   {
     collection: "Posts",

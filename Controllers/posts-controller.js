@@ -11,7 +11,14 @@ const showPosts = async (req, res, next) => {
         $or: [{ userId: req.user }, { _id: req.query.postId }],
         // $or: [{ userId: req.params.userId }, { _id: req.query.postId }],
       },
-      { comments: 1, shares: 1, userId: 1, postDescription: 1, likes: 1 }
+      {
+        comments: 1,
+        shares: 1,
+        userId: 1,
+        postDescription: 1,
+        likes: 1,
+        inputFile: 1,
+      }
     )
       // .select("comments shares userId postDescription ")
       .populate("comments")
@@ -23,7 +30,11 @@ const showPosts = async (req, res, next) => {
     } else {
       // console.log("post", posts);
       const formattedData = posts.map((object) => {
-        return { ...object._doc, likesCount: object.likes.length };
+        return {
+          ...object._doc,
+          likesCount: object.likes.length,
+          // inputFile: `https://localhost:8080/public/images/${object.inputFile}`,
+        };
       });
 
       // console.log(formattedData);
@@ -41,15 +52,22 @@ const showPosts = async (req, res, next) => {
 const showOthersPosts = async (req, res, next) => {
   try {
     const [user] = await User.find({ _id: req.user });
+
     // console.log(user.friends);
 
     // res.send(user.friends);
-    const posts = await Posts.find({ userId: { $in: user.friends } });
+    const posts = await Posts.find({ userId: { $in: user.friends } })
+      .populate("userId")
+      .populate("comments")
+      .populate("likes");
     // console.log(posts);
     if (!posts.length) {
       res.status(404).send({ message: Error_Messages.Not_Found });
     } else {
-      res.status(200).send(posts);
+      const formattedData = posts.map((object) => {
+        return { ...object._doc, likesCount: object.likes.length };
+      });
+      res.status(200).send(formattedData);
     }
   } catch (error) {
     next(error);
@@ -57,17 +75,20 @@ const showOthersPosts = async (req, res, next) => {
 };
 
 const createPost = async (req, res, next) => {
+  // console.log(req.file, "ertyui");
   try {
     await Posts.create({
       likes: [],
       comments: [],
       userId: req.user,
       postDescription: req.body.postDescription,
+      inputFile: req.file ? req.file.filename : null,
     }).then(() => {
       res.status(201).send({ message: Success_Messages.Created });
     });
   } catch (error) {
     // res.status(404).send({ message: Error_Messages.Not_Found });
+    console.log(error);
     next(error);
   }
 };
