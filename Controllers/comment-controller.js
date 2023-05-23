@@ -5,7 +5,6 @@ const { Error_Messages, Success_Messages } = require("../constants");
 
 const showComments = async (req, res, next) => {
   try {
-    // console.log(req.params.postId);
     const comment = await Comments.find({ postId: req.params.postId })
       .populate("userId")
       .populate("postId");
@@ -16,9 +15,6 @@ const showComments = async (req, res, next) => {
 };
 
 const createComments = async (req, res, next) => {
-  // console.log(req.body.comment, "Comment:");
-  // console.log(req.user, "UserId:");
-  // console.log(req.body.postId, "PostId");
   const payload = {
     comment: req.body.comment,
     userId: req.user,
@@ -31,24 +27,17 @@ const createComments = async (req, res, next) => {
       { $push: { comments: comments._id } },
       { new: true }
     );
-
-    await res.status(200).send({ message: Success_Messages.Comment });
-
-    // res.send(comments._id);
+    await res.status(200).send({ message: Success_Messages.Comment, comments });
   } catch (error) {
-    // console.log(error);
-    // res.status(404).send({ message: Error_Messages.Not_Found });
     next(error);
   }
 };
 
 const updateComments = async (req, res, next) => {
   try {
-    // const userId = req.body.userId;
     const [comment] = await Comments.find({
       $and: [{ userId: req.user }, { postId: req.body.postId }],
     });
-    // console.log(comment[0].userId);
     if (req.user == comment.userId) {
       await Comments.updateOne(
         { userId: req.user },
@@ -61,8 +50,6 @@ const updateComments = async (req, res, next) => {
       res.status(401).send({ message: Error_Messages.UnAuthorized });
     }
   } catch (error) {
-    // console.log(error);
-    // res.status(404).send({ message: Error_Messages.Not_Found });
     next(error);
   }
 };
@@ -72,7 +59,6 @@ const deleteComment = async (req, res, next) => {
     const comment = await Comments.findOneAndDelete({
       $and: [{ userId: req.user }, { postId: req.params.postId }],
     });
-    // console.log(comment);
     res
       .status(200)
       .send({ message: Success_Messages.Delete, comment: comment });
