@@ -7,6 +7,7 @@ const {
   updatePost,
   deletePost,
   showOthersPosts,
+  // putLikePost,
 } = require("../Controllers/posts-controller");
 const multer = require("multer");
 
@@ -31,6 +32,9 @@ router.post("/", upload.single("inputFile"), createPost);
 
 // Post Like
 router.post("/like", likePost);
+
+//Put Like Post
+// router.put("/like/:postId/:status", putLikePost);
 
 //Update
 router.put("/", updatePost);

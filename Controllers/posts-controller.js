@@ -2,25 +2,23 @@ const express = require("express");
 const Posts = require("../Models/Posts");
 const { Error_Messages, Success_Messages } = require("../constants");
 const User = require("../Models/UserModel");
+const { default: mongoose } = require("mongoose");
 
 const showPosts = async (req, res, next) => {
   try {
-    // console.log(req.user);
     const posts = await Posts.find(
       {
         $or: [{ userId: req.user }, { _id: req.query.postId }],
-        // $or: [{ userId: req.params.userId }, { _id: req.query.postId }],
-      },
-      {
-        comments: 1,
-        shares: 1,
-        userId: 1,
-        postDescription: 1,
-        likes: 1,
-        inputFile: 1,
       }
+      // {
+      //   comments: 1,
+      //   shares: 1,
+      //   userId: 1,
+      //   postDescription: 1,
+      //   likes: 1,
+      //   inputFile: 1,
+      // }
     )
-      // .select("comments shares userId postDescription ")
       .populate("comments")
       .populate("userId")
       .populate("likes");
@@ -28,23 +26,19 @@ const showPosts = async (req, res, next) => {
     if (!posts.length) {
       res.status(404).send({ message: Error_Messages.Not_Found });
     } else {
-      // console.log("post", posts);
       const formattedData = posts.map((object) => {
         return {
           ...object._doc,
           likesCount: object.likes.length,
-          // inputFile: `https://localhost:8080/public/images/${object.inputFile}`,
         };
       });
 
-      // console.log(formattedData);
       await res.status(200).send({
         message: "Success",
         post: formattedData,
       });
     }
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
@@ -52,22 +46,17 @@ const showPosts = async (req, res, next) => {
 const showOthersPosts = async (req, res, next) => {
   try {
     const [user] = await User.find({ _id: req.user });
-
-    // console.log(user.friends);
-
-    // res.send(user.friends);
     const posts = await Posts.find({ userId: { $in: user.friends } })
       .populate("userId")
       .populate("comments")
       .populate("likes");
-    // console.log(posts);
     if (!posts.length) {
       res.status(404).send({ message: Error_Messages.Not_Found });
     } else {
       const formattedData = posts.map((object) => {
         return { ...object._doc, likesCount: object.likes.length };
       });
-      res.status(200).send(formattedData);
+      await res.status(200).send(formattedData);
     }
   } catch (error) {
     next(error);
@@ -93,34 +82,82 @@ const createPost = async (req, res, next) => {
   }
 };
 
+// const putLikePost = async (req, res, next) => {
+//   try {
+//     if (req.params.status === "true") {
+//       const post = await Posts.findOneAndUpdate(
+//         { _id: req.params.postId },
+//         { $addToSet: { likes: [req.user] } }
+//       );
+//       console.log(post);
+//       // res.status(200).send({ message: post });
+//     } else {
+//       // console.log(req.params.postId);\
+
+//       const post = await Posts.aggregate([
+//         {
+//           $match: { _id: new mongoose.Types.ObjectId(req.params.postId) },
+//         },
+//         {
+//           $project: {
+//             likes: {
+//               $cond: {
+//                 if: { $elemMatch: req.user },
+//                 then: { $pull: { likes: req.user } },
+//               },
+//             },
+//           },
+//         },
+//       ]);
+
+//       console.log(post);
+//       res.send(post);
+//     }
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const likePost = async (req, res, next) => {
   try {
-    const [post] = await Posts.find({ _id: req.body.postId });
     if (req.body.like === "true") {
-      await Posts.updateOne(
+      const post = await Posts.findOneAndUpdate(
         { _id: req.body.postId },
         {
-          // $set: { likeCount: post.likes.length },
-          $addToSet: { likes: [req.user] },
+          $addToSet: { likes: req.user },
         },
         { new: true }
       );
-      // console.log(req.user);
-      await res.status(200).send({ message: "Liked" });
-    } else if (req.body.like === "false" && post.likes.includes(req.user)) {
-      // const [post] = await Posts.find({ _id: req.body.postId });
-      await Posts.updateOne(
-        { _id: req.body.postId },
-        {
-          $pull: { likes: req.user },
-          // $set: { likeCount: post.likes.length },
-        }
-      );
-      await res.status(200).send({ message: "Disliked" });
+      const formattedData = { ...post._doc, likesCount: post.likes.length };
+
+      await res.status(200).send({ message: "Liked", post: formattedData });
+    } else if (req.body.like === "false") {
+      const data = await Posts.findOne({
+        _id: req.body.postId,
+      });
+      if (data.likes.includes(req.user)) {
+        const post = await Posts.findOneAndUpdate(
+          { _id: req.body.postId },
+          {
+            $pull: { likes: req.user },
+          },
+          { new: true }
+        );
+        const formattedData = { ...post._doc, likesCount: post.likes.length };
+        await res
+          .status(200)
+          .send({ message: "Disliked", post: formattedData });
+      } else {
+        const formattedData = { ...data._doc, likesCount: data.likes.length };
+        await res
+          .status(200)
+          .send({ message: "Disliked", post: formattedData });
+        res
+          .status(400)
+          .send({ message: "invalid User Req", post: formattedData });
+      }
     } else {
-      // console.log(post.likes);
-      // console.log("here");
-      res.status(404).send({ message: Error_Messages.Not_Found });
+      res.status(400).send({ message: "Either True or False" });
     }
   } catch (error) {
     // console.log(error);
@@ -180,4 +217,5 @@ module.exports = {
   updatePost,
   deletePost,
   showOthersPosts,
+  // putLikePost,
 };
