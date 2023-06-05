@@ -31,7 +31,7 @@ router.post("/", upload.single("inputFile"), createPost);
 // router.post("/", createPost);
 
 // Post Like
-router.post("/like", likePost);
+router.put("/like", likePost);
 
 //Put Like Post
 // router.put("/like/:postId/:status", putLikePost);

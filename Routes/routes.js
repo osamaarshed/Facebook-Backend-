@@ -7,12 +7,14 @@ const user = require("./user");
 const posts = require("./posts");
 const comments = require("./comments");
 const addFriends = require("./addFriends");
-const constants = require("../constants");
+const messages = require("./messages");
+// const constants = require("../constants");
 const ErrorHandler = require("../Middlewares/errorHandling");
 
 router.use("/", user, ErrorHandler);
 router.use("/posts", authenticate, posts, ErrorHandler);
 router.use("/comments", authenticate, comments, ErrorHandler);
 router.use("/addfriends", authenticate, addFriends, ErrorHandler);
+router.use("/messages", authenticate, messages, ErrorHandler);
 
 module.exports = router;
