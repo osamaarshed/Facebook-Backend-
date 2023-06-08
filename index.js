@@ -44,7 +44,6 @@ io.on("connection", (socket) => {
   socket.on("send_message", async (data) => {
     const edittedData = await saveMessages(data);
     socket.to(data.chatRoomId).emit("recieve_message", edittedData);
-    // console.log("Message:", data);
   });
 
   //On Disconnect
@@ -52,5 +51,3 @@ io.on("connection", (socket) => {
     console.log("User Disconnected: ", socket.id);
   });
 });
-
-// module.exports = io;

@@ -5,7 +5,6 @@ const { Success_Messages } = require("../constants");
 //Show All Messages
 const showMessages = async (req, res, next) => {
   try {
-    // console.log("Pehla User", req.user);
     const messages = await Messages.find({
       participants: { $in: [req.user] },
     })
@@ -30,7 +29,7 @@ const saveMessages = async (data) => {
     });
     if (!chatId) {
       const res = await Messages.create({
-        chatRoomId: req.body.chatRoomId,
+        chatRoomId: data.chatRoomId,
         participants: [data.participant1, data.participant2],
         messages: [
           {
@@ -50,6 +49,7 @@ const saveMessages = async (data) => {
       const payload = {
         sentBy: data.messageOwner,
         text: data.text,
+        timeStamp: data.time,
       };
       const addMessage = await Messages.findOneAndUpdate(
         {
@@ -59,7 +59,9 @@ const saveMessages = async (data) => {
           $push: { messages: payload },
         },
         { new: true }
-      );
+      )
+        .populate("participants")
+        .populate("messages.sentBy");
       if (addMessage) {
         return addMessage;
       } else {
