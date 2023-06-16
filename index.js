@@ -42,8 +42,8 @@ io.on("connection", (socket) => {
 
   //Send Message
   socket.on("send_message", async (data) => {
-    const edittedData = await saveMessages(data);
-    socket.to(data.chatRoomId).emit("recieve_message", edittedData);
+    const [edittedData] = await saveMessages(data);
+    io.to(data.chatRoomId).emit("recieve_message", edittedData);
   });
 
   //On Disconnect

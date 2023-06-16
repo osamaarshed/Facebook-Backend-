@@ -2,9 +2,6 @@ const mongoose = require("mongoose");
 
 const messagesSchema = new mongoose.Schema(
   {
-    // chatRoomId: { type: String, required: true },
-    // participant1: { type: "ObjectId", ref: "User", required: true },
-    // participant2: { type: "ObjectId", ref: "User", required: true },
     chatRoomId: { type: String, required: true },
     participants: {
       type: ["ObjectId"],
@@ -23,7 +20,6 @@ const messagesSchema = new mongoose.Schema(
       {
         sentBy: { type: "ObjectId", ref: "User", required: true },
         text: { type: "String", required: true },
-        // timeStamp: { type: Date, default: Date.now },
         timeStamp: { type: String },
       },
     ],

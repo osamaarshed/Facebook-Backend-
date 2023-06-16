@@ -1,19 +1,71 @@
 const express = require("express");
 const Messages = require("../Models/Messages");
-const { Success_Messages } = require("../constants");
+const mongoose = require("mongoose");
 
 //Show All Messages
 const showMessages = async (req, res, next) => {
+  const ObjectId = mongoose.Types.ObjectId;
+  const userId = new ObjectId(req.user);
+  const queryPage = parseInt(req.query.page);
+  const page = queryPage * 10 || 10;
+  const limit = 10;
   try {
-    const messages = await Messages.find({
-      participants: { $in: [req.user] },
-    })
-      .populate("participants")
-      .populate("messages.sentBy");
+    const messages = await Messages.aggregate([
+      {
+        $match: {
+          $expr: {
+            $in: [userId, "$participants"],
+          },
+        },
+      },
+      {
+        $project: {
+          chatRoomId: 1,
+          participants: 1,
+          messages: {
+            $slice: ["$messages", -page, limit],
+          },
+        },
+      },
+
+      {
+        $lookup: {
+          from: "credentials",
+          localField: "participants",
+          foreignField: "_id",
+          as: "participants",
+        },
+      },
+      {
+        $unwind: "$messages",
+      },
+
+      {
+        $lookup: {
+          from: "credentials",
+          localField: "messages.sentBy",
+          foreignField: "_id",
+          as: "messages.sentBy",
+        },
+      },
+      {
+        $unwind: "$messages.sentBy",
+      },
+      {
+        $group: {
+          _id: "$_id",
+          chatRoomId: { $first: "$chatRoomId" },
+          participants: { $first: "$participants" },
+          messages: { $push: "$messages" },
+        },
+      },
+    ]);
+
     if (messages.length) {
-      res
-        .status(200)
-        .send({ message: "SuccessFully Fetched", chats: messages });
+      res.status(200).send({
+        message: "SuccessFully Fetched",
+        chats: messages,
+      });
     } else {
       res.status(400).send({ message: "No Chats" });
     }
@@ -51,7 +103,22 @@ const saveMessages = async (data) => {
         text: data.text,
         timeStamp: data.time,
       };
-      const addMessage = await Messages.findOneAndUpdate(
+
+      // const addMessage = await Messages.findOneAndUpdate(
+      //   {
+      //     chatRoomId: data.chatRoomId,
+      //   },
+      //   {
+      //     $push: { messages: payload },
+      //   },
+      //   { new: true }
+      // )
+      //   .populate("participants")
+      //   .populate("messages.sentBy");
+      // const queryPage = data.page;
+      // const page = queryPage * 10 || 10;
+      // const limit = 10;
+      await Messages.findOneAndUpdate(
         {
           chatRoomId: data.chatRoomId,
         },
@@ -59,10 +126,56 @@ const saveMessages = async (data) => {
           $push: { messages: payload },
         },
         { new: true }
-      )
-        .populate("participants")
-        .populate("messages.sentBy");
-      if (addMessage) {
+      );
+      // .populate("participants")
+      // .populate("messages.sentBy");
+      const addMessage = await Messages.aggregate([
+        {
+          $match: {
+            chatRoomId: data.chatRoomId,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            chatRoomId: 1,
+            participants: 1,
+            messages: 1,
+          },
+        },
+        {
+          $lookup: {
+            from: "credentials",
+            localField: "participants",
+            foreignField: "_id",
+            as: "participants",
+          },
+        },
+        {
+          $unwind: "$messages",
+        },
+        {
+          $lookup: {
+            from: "credentials",
+            localField: "messages.sentBy",
+            foreignField: "_id",
+            as: "messages.sentBy",
+          },
+        },
+        {
+          $unwind: "$messages.sentBy",
+        },
+        {
+          $group: {
+            _id: "$_id",
+            chatRoomId: { $first: "$chatRoomId" },
+            participants: { $first: "$participants" },
+            messages: { $push: "$messages" },
+          },
+        },
+      ]);
+      if (addMessage.length) {
+        console.log("Add Message: ", addMessage);
         return addMessage;
       } else {
         console.log("Bad Request");
@@ -73,106 +186,7 @@ const saveMessages = async (data) => {
   }
 };
 
-// const saveMessage = async (req, res, next) => {
-//   try {
-//     const chatId = await Messages.findOne({
-//       chatRoomId: req.body.chatRoomId,
-//     });
-//     if (!chatId) {
-//       // console.log("Herer");
-//       const data = await Messages.create({
-//         chatRoomId: req.body.chatRoomId,
-//         participants: [req.user, req.body.participant2],
-//         messages: [
-//           {
-//             sentBy: req.body.messageOwner,
-//             text: req.body.text,
-//             timeStamp: req.body.time,
-//           },
-//         ],
-//       });
-//       // console.log("data", data);
-//       if (data) {
-//         console.log("Message Sent");
-//         res.status(200).send({ message: Success_Messages.Created, data: data });
-//       } else {
-//         // console.log("ifelse");
-//         res.status(400).send({ message: "Bad Request in ifelse" });
-//       }
-//     } else {
-//       const payload = {
-//         sentBy: req.body.messageOwner,
-//         text: req.body.text,
-//       };
-//       const addMessage = await Messages.findOneAndUpdate(
-//         {
-//           chatRoomId: req.body.chatRoomId,
-//         },
-//         {
-//           $push: { messages: payload },
-//         },
-//         { new: true }
-//       );
-//       if (addMessage) {
-//         res.status(200).send({ message: "Message Sent Successfully" });
-//       } else {
-//         res.status(400).send({ message: "Bad Request" });
-//       }
-//     }
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const saveMessage = async (req, res, next) => {
-//   try {
-//     const chatId = await Messages.findOne({
-//       chatRoomId: req.params.chatRoomId,
-//     });
-//     if (!chatId) {
-//       const data = await Messages.create({
-//         chatRoomId: req.params.chatRoomId,
-//         participant1: req.user,
-//         participant2: req.params.participant2,
-//         messages: [
-//           {
-//             sentBy: req.params.messageOwner,
-//             text: req.body.text,
-//             timeStamp: req.body.time,
-//           },
-//         ],
-//       });
-//       if (data) {
-//         console.log("Message Sent");
-//         res.status(200).send({ message: Success_Messages.Created, data: data });
-//       }
-//     } else {
-//       const payload = {
-//         sentBy: req.params.messageOwner,
-//         text: req.body.text,
-//       };
-//       const addMessage = await Messages.findOneAndUpdate(
-//         {
-//           chatRoomId: req.params.chatRoomId,
-//         },
-//         {
-//           $push: { messages: payload },
-//         },
-//         { new: true }
-//       );
-//       if (addMessage) {
-//         res.status(200).send({ message: "Message Sent Successfully" });
-//       } else {
-//         res.status(400).send({ message: "Bad Request" });
-//       }
-//     }
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 module.exports = {
   showMessages,
-  // saveMessage,
   saveMessages,
 };
