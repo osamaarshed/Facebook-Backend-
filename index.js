@@ -46,6 +46,12 @@ io.on("connection", (socket) => {
     io.to(data.chatRoomId).emit("recieve_message", edittedData);
   });
 
+  //Start New Chat
+  socket.on("send_new_message", async (data) => {
+    const [newEdittedData] = await saveMessages(data);
+    io.to(data.chatRoomId).emit("recieve_new_message", newEdittedData);
+  });
+
   //On Disconnect
   socket.on("disconnect", () => {
     console.log("User Disconnected: ", socket.id);

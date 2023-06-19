@@ -44,12 +44,16 @@ const showPosts = async (req, res, next) => {
 };
 
 const showOthersPosts = async (req, res, next) => {
+  const limit = 4;
+  const skip = req.query.page * limit || 0;
   try {
     const [user] = await User.find({ _id: req.user });
     const posts = await Posts.find({ userId: { $in: user.friends } })
       .populate("userId")
       .populate("comments")
-      .populate("likes");
+      .populate("likes")
+      .skip(skip)
+      .limit(limit);
     if (!posts.length) {
       res.status(404).send({ message: Error_Messages.Not_Found });
     } else {
