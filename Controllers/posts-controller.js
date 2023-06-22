@@ -3,6 +3,7 @@ const Posts = require("../Models/Posts");
 const { Error_Messages, Success_Messages } = require("../constants");
 const User = require("../Models/UserModel");
 const { default: mongoose } = require("mongoose");
+const fs = require("fs");
 
 const showPosts = async (req, res, next) => {
   try {
@@ -68,7 +69,6 @@ const showOthersPosts = async (req, res, next) => {
 };
 
 const createPost = async (req, res, next) => {
-  // console.log(req.file, "ertyui");
   try {
     await Posts.create({
       likes: [],
@@ -80,47 +80,10 @@ const createPost = async (req, res, next) => {
       res.status(201).send({ message: Success_Messages.Created });
     });
   } catch (error) {
-    // res.status(404).send({ message: Error_Messages.Not_Found });
     console.log(error);
     next(error);
   }
 };
-
-// const putLikePost = async (req, res, next) => {
-//   try {
-//     if (req.params.status === "true") {
-//       const post = await Posts.findOneAndUpdate(
-//         { _id: req.params.postId },
-//         { $addToSet: { likes: [req.user] } }
-//       );
-//       console.log(post);
-//       // res.status(200).send({ message: post });
-//     } else {
-//       // console.log(req.params.postId);\
-
-//       const post = await Posts.aggregate([
-//         {
-//           $match: { _id: new mongoose.Types.ObjectId(req.params.postId) },
-//         },
-//         {
-//           $project: {
-//             likes: {
-//               $cond: {
-//                 if: { $elemMatch: req.user },
-//                 then: { $pull: { likes: req.user } },
-//               },
-//             },
-//           },
-//         },
-//       ]);
-
-//       console.log(post);
-//       res.send(post);
-//     }
-//   } catch (error) {
-//     next(error);
-//   }
-// };
 
 const likePost = async (req, res, next) => {
   try {
@@ -172,23 +135,48 @@ const likePost = async (req, res, next) => {
 
 const updatePost = async (req, res, next) => {
   try {
-    const post = await Posts.findOneAndUpdate(
-      {
-        $and: [{ userId: req.user }, { _id: req.body.postId }],
-      },
-      { postDescription: req.body.postDescription }
-    );
-    // console.log(post);
-
-    if (post) {
-      res.status(200).send({ message: Success_Messages.Update });
+    if (req.file) {
+      const post = await Posts.findOneAndUpdate(
+        {
+          $and: [{ userId: req.user }, { _id: req.body.postId }],
+        },
+        {
+          postDescription: req.body.postDescription,
+          inputFile: req.file ? req.file.filename : null,
+        }
+      );
+      if (post) {
+        fs.unlink(`./public/images/${post.inputFile}`, function (err) {
+          if (err) {
+            return console.log("Error:", err);
+          } else {
+            console.log("Unliked");
+          }
+        });
+        res.status(200).send({ message: Success_Messages.Update });
+      } else {
+        res.status(401).send({
+          message: Error_Messages.Not_Found,
+        });
+      }
     } else {
-      res.status(401).send({
-        message: Error_Messages.Not_Found,
-      });
+      const post = await Posts.findOneAndUpdate(
+        {
+          $and: [{ userId: req.user }, { _id: req.body.postId }],
+        },
+        {
+          postDescription: req.body.postDescription,
+        }
+      );
+      if (post) {
+        res.status(200).send({ message: Success_Messages.Update });
+      } else {
+        res.status(401).send({
+          message: Error_Messages.Not_Found,
+        });
+      }
     }
   } catch (error) {
-    // res.status(404).send({ message: Error_Messages.Not_Found });
     next(error);
   }
 };
@@ -221,5 +209,4 @@ module.exports = {
   updatePost,
   deletePost,
   showOthersPosts,
-  // putLikePost,
 };

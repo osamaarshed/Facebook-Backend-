@@ -13,7 +13,6 @@ const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // cb(null, "../../facebook_frontend/public");
     cb(null, "public/images");
   },
   filename: function (req, file, cb) {
@@ -21,25 +20,22 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-//Show
+//Show My Posts
 router.get("/", showPosts);
 
+//Show Others Posts
 router.get("/all", showOthersPosts);
 
-// Create
+// Create Post
 router.post("/", upload.single("inputFile"), createPost);
-// router.post("/", createPost);
 
-// Post Like
+// Like Post
 router.put("/like", likePost);
 
-//Put Like Post
-// router.put("/like/:postId/:status", putLikePost);
+//Update Post
+router.put("/", upload.single("inputFile"), updatePost);
 
-//Update
-router.put("/", updatePost);
-
-//Delete
+//Delete Post
 router.delete("/:postId", deletePost);
 
 module.exports = router;

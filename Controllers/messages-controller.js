@@ -6,9 +6,9 @@ const mongoose = require("mongoose");
 const showMessages = async (req, res, next) => {
   const ObjectId = mongoose.Types.ObjectId;
   const userId = new ObjectId(req.user);
-  const queryPage = parseInt(req.query.page);
-  const page = queryPage * 10 || 10;
-  const limit = 10;
+  // const queryPage = parseInt(req.query.page);
+  // const page = queryPage * 10 || 10;
+  // const limit = 10;
   try {
     const messages = await Messages.aggregate([
       {
@@ -22,9 +22,10 @@ const showMessages = async (req, res, next) => {
         $project: {
           chatRoomId: 1,
           participants: 1,
-          messages: {
-            $slice: ["$messages", -page, limit],
-          },
+          messages: 1,
+          // messages: {
+          //   $slice: ["$messages", -page, limit],
+          // },
         },
       },
 
@@ -61,6 +62,72 @@ const showMessages = async (req, res, next) => {
       },
     ]);
 
+    if (messages.length) {
+      res.status(200).send({
+        message: "SuccessFully Fetched",
+        chats: messages,
+      });
+    } else {
+      res.status(400).send({ message: "No Chats" });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Show Specific Messages
+const showSpecificMessages = async (req, res, next) => {
+  const queryPage = parseInt(req.query.page);
+  const page = queryPage * 10 || 10;
+  const limit = 10;
+  try {
+    const messages = await Messages.aggregate([
+      {
+        $match: {
+          chatRoomId: req.params.chatRoomId,
+        },
+      },
+      {
+        $project: {
+          chatRoomId: 1,
+          participants: 1,
+          messages: {
+            $slice: ["$messages", -page, limit],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "credentials",
+          localField: "participants",
+          foreignField: "_id",
+          as: "participants",
+        },
+      },
+      {
+        $unwind: "$messages",
+      },
+
+      {
+        $lookup: {
+          from: "credentials",
+          localField: "messages.sentBy",
+          foreignField: "_id",
+          as: "messages.sentBy",
+        },
+      },
+      {
+        $unwind: "$messages.sentBy",
+      },
+      {
+        $group: {
+          _id: "$_id",
+          chatRoomId: { $first: "$chatRoomId" },
+          participants: { $first: "$participants" },
+          messages: { $push: "$messages" },
+        },
+      },
+    ]);
     if (messages.length) {
       res.status(200).send({
         message: "SuccessFully Fetched",
@@ -188,5 +255,6 @@ const saveMessages = async (data) => {
 
 module.exports = {
   showMessages,
+  showSpecificMessages,
   saveMessages,
 };
