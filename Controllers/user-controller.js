@@ -10,7 +10,6 @@ const showUsers = async (req, res, next) => {
       .populate("friendRequests", "name");
     res.status(200).send(users);
   } catch (error) {
-    // res.status(404).send({ message: Error_Messages.Not_Found });
     next(error);
   }
 };

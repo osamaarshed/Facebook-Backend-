@@ -141,6 +141,35 @@ const showSpecificMessages = async (req, res, next) => {
   }
 };
 
+// Delete Messages
+const deleteMessages = async (req, res, next) => {
+  const id = req.query.messages_id;
+  try {
+    const message = await Messages.findOneAndUpdate(
+      {
+        chatRoomId: req.params.chatRoomId,
+      },
+      {
+        $pull: {
+          messages: {
+            sentBy: req.params.user,
+            _id: id,
+          },
+        },
+      },
+      { new: true }
+    );
+    if (message) {
+      console.log("Deleted: ");
+      res.send({ RES: message });
+    } else {
+      console.log("Not deleted");
+      res.send({ RES: message });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
 const saveMessages = async (data) => {
   try {
     const chatId = await Messages.findOne({
@@ -170,21 +199,6 @@ const saveMessages = async (data) => {
         text: data.text,
         timeStamp: data.time,
       };
-
-      // const addMessage = await Messages.findOneAndUpdate(
-      //   {
-      //     chatRoomId: data.chatRoomId,
-      //   },
-      //   {
-      //     $push: { messages: payload },
-      //   },
-      //   { new: true }
-      // )
-      //   .populate("participants")
-      //   .populate("messages.sentBy");
-      // const queryPage = data.page;
-      // const page = queryPage * 10 || 10;
-      // const limit = 10;
       await Messages.findOneAndUpdate(
         {
           chatRoomId: data.chatRoomId,
@@ -194,8 +208,6 @@ const saveMessages = async (data) => {
         },
         { new: true }
       );
-      // .populate("participants")
-      // .populate("messages.sentBy");
       const addMessage = await Messages.aggregate([
         {
           $match: {
@@ -257,4 +269,5 @@ module.exports = {
   showMessages,
   showSpecificMessages,
   saveMessages,
+  deleteMessages,
 };

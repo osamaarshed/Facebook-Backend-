@@ -7,15 +7,19 @@ const {
   showRequests,
   showFriends,
   deleteFriends,
+  showPaginatedFriends,
+  findAllUsers,
 } = require("../Controllers/addFriends-controller");
 
 //Show Friends
+
 router.get("/", showFriends);
+router.get("/paginated", showPaginatedFriends);
 //Show Requests
 router.get("/requests", showRequests);
 //Find Friends
+router.get("/allusers", findAllUsers);
 router.get("/:email", findFriend);
-
 //Send Request
 router.post("/", sendRequest);
 

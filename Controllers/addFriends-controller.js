@@ -1,5 +1,6 @@
 const express = require("express");
 const User = require("../Models/UserModel");
+const mongoose = require("mongoose");
 const {
   Error_Messages,
   Random_Messages,
@@ -7,14 +8,25 @@ const {
 } = require("../constants");
 
 const findFriend = async (req, res, next) => {
-  // console.log(req.params.email);
   const friend = await User.find({ email: req.params.email });
-  // console.log(friend);
   if (!friend) {
     // console.log("here");
     res.status(404).send({ message: Error_Messages.Not_Found });
   } else {
     res.status(200).send(friend);
+  }
+};
+
+const findAllUsers = async (req, res, next) => {
+  try {
+    const friend = await User.find({});
+    if (!friend.length) {
+      res.status(404).send({ message: Error_Messages.Not_Found });
+    } else {
+      res.status(200).send(friend);
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -71,6 +83,46 @@ const showFriends = async (req, res, next) => {
     } else {
       res.status(200).send({ message: user.friends });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+const showPaginatedFriends = async (req, res, next) => {
+  const ObjectId = mongoose.Types.ObjectId;
+  const userId = new ObjectId(req.user);
+  const skip = req.query.page * 5 || 0;
+  const limit = 5;
+  try {
+    const [user] = await User.aggregate([
+      {
+        $match: {
+          _id: userId,
+        },
+      },
+      {
+        $project: {
+          noOfFriends: {
+            $cond: {
+              if: { $isArray: "$friends" },
+              then: { $size: "$friends" },
+              else: "NA",
+            },
+          },
+          friends: {
+            $slice: ["$friends", skip, limit],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "credentials",
+          localField: "friends",
+          foreignField: "_id",
+          as: "friends",
+        },
+      },
+    ]);
+    res.status(200).send({ message: user.friends, count: user.noOfFriends });
   } catch (error) {
     next(error);
   }
@@ -148,4 +200,6 @@ module.exports = {
   showRequests,
   showFriends,
   deleteFriends,
+  showPaginatedFriends,
+  findAllUsers,
 };
