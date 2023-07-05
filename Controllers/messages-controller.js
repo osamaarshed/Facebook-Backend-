@@ -80,6 +80,7 @@ const showSpecificMessages = async (req, res, next) => {
   const queryPage = parseInt(req.query.page);
   const page = queryPage * 10 || 10;
   const limit = 10;
+  console.log("page: ", page);
   try {
     const messages = await Messages.aggregate([
       {
